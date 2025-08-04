@@ -76,8 +76,11 @@ if __name__=="__main__":
     embeddings = loader.load_embeddings()
     print(f"Embedding model is loaded: {embeddings}")
 
-    llm = loader.load_llm()
-    print(f"LLM Loaded: {llm}")
+    # result = embeddings.embed_query("Hello how are you")
+    # print(f"Embedding result: {result}")
+
+    # llm = loader.load_llm()
+    # print(f"LLM Loaded: {llm}")
 
     #Test model
     result = llm.invoke("Hello how are you")
