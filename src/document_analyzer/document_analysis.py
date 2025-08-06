@@ -6,7 +6,7 @@ from exeption.custom_exeption import DocumentPortalExeption
 from model.models import *
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.output_parsers import OutputFixingParser
-from prompt.prompt_library import document_analysis_prompt
+from prompt.prompt_library import PROMPT_REGISTRY
 
 class DocumentAnalyzer:
     def __init__(self):
@@ -18,7 +18,7 @@ class DocumentAnalyzer:
 
             self.parser = JsonOutputParser(pydantic_object=Metadata)
             self.fixing_parser = OutputFixingParser.from_llm(parser=self.parser, llm = self.llm)
-            self.prompt = document_analysis_prompt
+            self.prompt = PROMPT_REGISTRY["documentanalysis"]
             self.log.info("Document Anylyzer initialized successfully")
         except Exception as e:
             self.log.error(f"Error initializing DocumentAnalyzer: {e}")
