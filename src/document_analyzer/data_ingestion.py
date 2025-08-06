@@ -59,23 +59,23 @@ if __name__ == "__main__":
     from io import BytesIO
     pdf_path = r"C:\Users\bsmun\document_portal\data\document_analysis\NIPS-2017-attention-is-all-you-need-Paper.pdf"
 
-class DummyFile:
-    def __init__(self, file_path):
-        self.name = Path(file_path).name
-        self._file_path = file_path
+    class DummyFile:
+        def __init__(self, file_path):
+            self.name = Path(file_path).name
+            self._file_path = file_path
 
-    def getbuffer(self):
-        return open(self._file_path,"rb").read()
-    
-dummy_pdf = DummyFile(pdf_path)
-handler = DocumentHandler()
+        def getbuffer(self):
+            return open(self._file_path,"rb").read()
+        
+    dummy_pdf = DummyFile(pdf_path)
+    handler = DocumentHandler()
 
-try:
-    save_path = handler.save_pdf(dummy_pdf)
-    print(save_path)
+    try:
+        save_path = handler.save_pdf(dummy_pdf)
+        print(save_path)
 
-    content = handler.read_pdf(save_path)
-    print("PDF content: ")
-    print(content[:500])
-except Exception as e:
-    print(f"Error: {e}")
+        content = handler.read_pdf(save_path)
+        print("PDF content: ")
+        print(content[:500])
+    except Exception as e:
+        print(f"Error: {e}")
