@@ -61,7 +61,7 @@ def test_compare_documents():
             self.buffer = file_path.read_bytes()
 
         def getbuffer(self):
-            return self._buffer
+            return self.buffer
 
     comparator = DocumentIngestion()
     ref_upload = FakeUpload(ref_path)
@@ -79,6 +79,6 @@ def test_compare_documents():
     print("\n=== COMPARISION RESULT ===")
     print(comparison_pdf.head())
 
-    if __name__ == "__main__":
-        test_compare_documents()
+if __name__ == "__main__":
+    test_compare_documents()
 
