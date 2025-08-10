@@ -40,7 +40,11 @@ class DocumentComparatorLLM:
         try:
             df = pd.DataFrame(response_parsed)
             self.log.info("Response Formatted in DataFrame", dataframe=df)
+            return df
         except Exception as e:
             self.log.error(f"Error formatting response into DataFrame: {e}")
             raise DocumentPortalExeption("Error formating response: ", sys)
+
+
+     
 

@@ -4,8 +4,8 @@ import fitz
 from logger.custom_logger import CustomLogger
 from exeption.custom_exeption import DocumentPortalExeption
 
-class DocumentComparator:
-    def __init__(self, base_dir):
+class DocumentIngestion:
+    def __init__(self, base_dir:str="data\document_compare"):
         self.log = CustomLogger().get_logger(__name__)
         self.base_dir = Path(base_dir)
         self.base_dir.mkdir(parents=True, exist_ok=True)
@@ -62,3 +62,23 @@ class DocumentComparator:
         except Exception as e:
             self.log.error(f"Error reading PDF: {e}")
             raise DocumentPortalExeption("An error occured while reading the PDF", sys)
+        
+
+        def combine_document(self)-> str:
+            try:
+                content_dict = {}
+                doc_parts = []
+                for filename in sorted(self.base_dir.iterdir()):
+                    if filename.is_file() and filename.suffix==".pdf":
+                        content_dict[filename] = self.read_pdf(filename)
+
+                for filename, content in content_dict.items():
+                    doc_parts.append(f"Document: {filename}\n{content}")
+
+                combine_text = "\n\n".join(doc_parts)
+                self.log.info("Document combined", count = len(doc_parts))
+                return combine_text
+            
+            except Exception as e:
+                self.log.error("Error while comparing documents")
+                raise DocumentPortalExeption("An error occurred while comparing documents.",sys) 
