@@ -69,6 +69,7 @@ def test_compare_documents():
 
     ref_file, act_file = comparator.save_uploaded_files(ref_upload, act_upload)
     combined_text = comparator.combine_document()
+    comparator.clean_old_session(keep_latest=3)
 
     print("\n Combined Text preview (First 1000 chars: )\n")
     combined_text[:1000]

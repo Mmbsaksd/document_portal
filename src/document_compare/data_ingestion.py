@@ -1,30 +1,23 @@
 import sys
+import datetime
 from pathlib import Path
 import fitz
 from logger.custom_logger import CustomLogger
 from exeption.custom_exeption import DocumentPortalExeption
-
+from datetime import datetime, timezone 
+import uuid 
 class DocumentIngestion:
-    def __init__(self, base_dir:str="data\document_compare"):
+    def __init__(self, base_dir:str="data\document_compare", session_id=None):
         self.log = CustomLogger().get_logger(__name__)
         self.base_dir = Path(base_dir)
-        self.base_dir.mkdir(parents=True, exist_ok=True)
-    def delete_existing_files(self):
-        try:
-            if self.base_dir.exists() and self.base_dir.is_dir:
-                for file in self.base_dir.iterdir():
-                    if file.is_file():
-                        file.unlink()
-                        self.log.info("File deleted", path=str(file))
-                self.log.info("Directory cleaned", directory = str(self.base_dir))
+        self.session_id = session_id or f"session_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+        self.session_path = self.base_dir / self.session_id
+        self.session_path.mkdir(parents=True, exist_ok=True)
 
-        except Exception as e:
-            self.log.error(f"Error deleting the PDF: {e}")
-            raise DocumentPortalExeption("An error occured while deleting existing PDF", sys)
+        self.log.info("Document comparator initialized.", session_path = str(self.session_path))
+    
     def save_uploaded_files(self, reference_file, actual_file):
         try:
-            self.delete_existing_files()
-            self.log.info("Existing file deleted successfully.")
 
             ref_path = self.base_dir/reference_file.name
             act_path = self.base_dir/actual_file.name
@@ -66,19 +59,30 @@ class DocumentIngestion:
 
     def combine_document(self)-> str:
         try:
-            content_dict = {}
             doc_parts = []
-            for filename in sorted(self.base_dir.iterdir()):
-                if filename.is_file() and filename.suffix==".pdf":
-                    content_dict[filename] = self.read_pdf(filename)
-
-            for filename, content in content_dict.items():
-                doc_parts.append(f"Document: {filename}\n{content}")
+            for file in sorted(self.session_path.iterdir()):
+                if file.is_file() and file.suffix==".pdf":
+                    content = self.read_pdf(file)
+                    doc_parts.append(f"Document: {file}\n{content}")
 
             combine_text = "\n\n".join(doc_parts)
-            self.log.info("Document combined", count = len(doc_parts))
+            self.log.info("Document combined", count = len(doc_parts), session = self.session_id)
             return combine_text
         
         except Exception as e:
             self.log.error("Error while comparing documents")
             raise DocumentPortalExeption("An error occurred while comparing documents.",sys) 
+    def clean_old_session(self, keep_latest:int = 3):
+        try:
+            session_folder = sorted(
+                [f for f in self.base_dir.iterdir() if f.is_dir()],
+                reverse=True
+            )
+            for folder in session_folder[keep_latest:]:
+                for file in folder.iterdir():
+                    file.unlink
+                folder.rmdir()
+                self.log.info("Old session folder deleted",path = str(folder))
+        except Exception as e:
+            self.log.error("Error cleaning old sessions", error=str(e))
+            raise DocumentPortalExeption("Error cleaning se ssions", sys)
