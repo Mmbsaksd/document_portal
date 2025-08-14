@@ -37,7 +37,7 @@ class Model_loader:
         log.info("Enviroment variables validated", available_keys = [k for k in self.api_keys if self.api_keys[k]])
 
 
-    def load_llm(self):
+    def load_llm(self, *args, **kwargs):
         llm_block = self.config["llm"]
         log.info("Loading LLM...")
         provider_key = os.getenv("LLM_PROVIDER","groq")

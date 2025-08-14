@@ -60,7 +60,7 @@ class SingleDocIngestor:
             self.log.info("FAISS index created and saved", faiss_path = str(self.faiss_dir))
 
             retriever = vectorstore.as_retriever(search_type = "similarity", search_kwargs={"k":5})
-            self.lof.info("Retriever created successfully", retriever_type = str(type(retriever)))
+            self.log.info("Retriever created successfully", retriever_type = str(type(retriever)))
             return retriever
 
 
