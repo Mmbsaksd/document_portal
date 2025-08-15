@@ -123,10 +123,7 @@ def test_conversional_rag_pdf(pdf_path:str, question:str):
 
 if __name__=="__main__":
     pdf_path = r"C:\\Users\\bsmun\\document_portal\\data\\single_document_chat\\NIPS-2017-attention-is-all-you-need-Paper.pdf"
-    question = "What is the attention mechanism in simple term?"
+    question = "Give summary in 100 words?"
 
     #Run the test
     test_conversional_rag_pdf(pdf_path,question)
-
-
-
