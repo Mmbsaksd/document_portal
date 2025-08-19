@@ -55,7 +55,7 @@ class ConversationalRAG:
             self.log.error("Failed to load retriever from FAISS", error = str(e))
             raise DocumentPortalExeption("Loading error in conversationalRAG", sys)
 
-    def invoke(self, user_input:str,chat_history:Optional[List[BaseMessage]]):
+    def invoke(self, user_input:str,chat_history:Optional[List[BaseMessage]]=None):
         try:
             chat_history = chat_history or []
             payload = {"input":user_input, "chat_history":chat_history}

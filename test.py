@@ -151,26 +151,29 @@ def test_document_ingestion_and_rag():
             else:
                 print(f"File does not exists: {file_path}")
 
-            if not upload_files:
-                print("No valid files to upload")
-                sys.exit(1)
-            ingestor = DocumentIngestor()
-            retriever = ingestor.ingest_files(upload_files)
+        if not upload_files:
+            print("No valid files to upload")
+            sys.exit(1)
+        ingestor = DocumentIngestor()
+        retriever = ingestor.ingest_files(upload_files)
 
-            for f in upload_files:
-                f.close()
-            
-            session_id = "test_multi_doc_chat"
+        for f in upload_files:
+            f.close()
+        
+        session_id = "test_multi_doc_chat"
 
-            rag = ConversationalRAG(session_id=session_id, retriever=retriever)
-            question = "what is attention is all you paper about"
+        rag = ConversationalRAG(session_id=session_id, retriever=retriever)
+        question = "what is attention is all you paper about"
 
 
-            answer = rag.invoke(question)
-            print(f"\n Question: ", question)
-            print(f"Answer: ", answer)
+        answer = rag.invoke(question)
+        print(f"\n Question: ", question)
+        print(f"Answer: ", answer)
 
 
     except Exception as e:
         print(f"Test failed: {str(e)}")
         sys.exit(1)
+
+if __name__ == "__main__":
+    test_document_ingestion_and_rag()

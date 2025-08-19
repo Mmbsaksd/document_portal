@@ -8,7 +8,7 @@ from logger.custom_logger import CustomLogger
 from exeption.custom_exeption import DocumentPortalExeption
 from utils.model_loader import Model_loader
 from datetime import datetime, timezone
-from langchain.document_loaders import Docx2txtLoader, TextLoader
+from langchain_community.document_loaders import Docx2txtLoader, TextLoader
 
 
 class DocumentIngestor:
@@ -36,7 +36,7 @@ class DocumentIngestor:
                 faiss_dir = str(self.faiss_dir),
                 session_id = self.session_id,
                 temp_path = str(self.session_temp_dir),
-                faiss_dir = str(self.session_faiss_dir)
+                faiss_path = str(self.session_faiss_dir)
             )
 
 
@@ -63,10 +63,13 @@ class DocumentIngestor:
 
                 if ext == ".pdf":
                     loader = PyPDFLoader(str(temp_path))
-                elif ext == ".doc":
+                elif ext == ".docx":
                     loader = Docx2txtLoader(str(temp_path))
                 elif ext==".txt":
-                    loader = TextLoader(str(temp_path, encoding="utf-8"))
+                    loader = TextLoader(str(temp_path), encoding="utf-8")
+                else:
+                    self.log.warning("Unsupported file skipped after validation", filename=uploaded_file.name)
+                    continue
 
                 docs = loader.load()
                 documents.extend(docs)
