@@ -163,7 +163,7 @@ def test_document_ingestion_and_rag():
         session_id = "test_multi_doc_chat"
 
         rag = ConversationalRAG(session_id=session_id, retriever=retriever)
-        question = "what is attention is all you paper about"
+        question = "what said zelenskyy in his speech on parliment"
 
 
         answer = rag.invoke(question)
@@ -177,3 +177,6 @@ def test_document_ingestion_and_rag():
 
 if __name__ == "__main__":
     test_document_ingestion_and_rag()
+
+
+# testing for multidocument
