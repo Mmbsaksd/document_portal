@@ -55,33 +55,32 @@ class FaissManager:
 
     def save_meta(self):
         self.meta_path.write_text(json.dumps(self._meta, ensure_ascii=False), encoding="utf-8")
-    def add_document():
-        pass
-
-    def load_or_create(self, docs:List[Document]):
+    def add_document(self, docs:List[Document]):
         if self.vs is None:
-            raise RuntimeError("Call load_or_create")
-        pass
+            raise RuntimeError("Call load_or_create() before add_document")
+        new_docs: List[Document] = []
 
-class DocHandler:
-    def __init__(self):
-        pass
-    def save_pdf(self):
-        pass
-    def read_pdf(self):
-        pass
+        for d in docs:
+            key = self._fingerprint(d.page_content, d.metadata or {})
+            if key in self._meta["rows"]:
+                continue
+            self._meta["rows"][key]=True
+            new_docs.append(d)
 
-class DocumentComparator:
-    def __init__(self):
-        pass
-    def save_uploaded_files(self):
-        pass
-    def read_pdf(self):
-        pass
-    def combine_documents(self):
-        pass
-    def clean_old_session(self):
-        pass
+        if new_docs:
+            self.vs.add_documents(new_docs)
+            self.vs.save_local(str(self.index_dir))
+            self.save_meta()
+        return len(new_docs)
+
+    def load_or_create(self):
+        if self._exists():
+            self.vs = FAISS.load_local(
+                str(self.index_dir),
+                embeddings=self.emb,
+                allow_dangerous_deserialization=True
+            )
+            return self.vs
 
 class ChatIngestor:
     def __init__(self):
@@ -92,3 +91,94 @@ class ChatIngestor:
         pass
     def built_retriever(self):
         pass
+
+
+class DocHandler:
+    def __init__(self, data_dir:Optional[str]=None, session_id:Optional[str]=None):
+        self.log = CustomLogger.get_logger(__name__)
+        self.data_dir = data_dir or os.getenv("DATA_STORAGE_PATH", os.path.join(os.getcwd(),"data","document_analysis"))
+        self.session_id = session_id or session_id("session_id")
+        self.session_path = os.path.join(self.data_dir, self.session_id)
+        os.makedirs(self.session_path, exist_ok=True)
+        self.log.info("DocHandler initialized", session_id = self.session_id, session_path = self.session_path)
+
+    def save_pdf(self, uploaded_file)->str:
+        try:
+            filename = os.path.basename(uploaded_file)
+            if not filename.lower().endswith(".pdf"):
+                raise ValueError("Invalid file type. Only PDFs are allowed.")
+            save_path = os.path.join(self.session_path, filename)
+            with open(save_path,"wb") as f:
+                if hasattr(uploaded_file,"read"):
+                    f.write(uploaded_file.read())
+                else:
+                    f.write(uploaded_file.getbuffer())
+            self.log.info("PDF saved successfully", file = filename, save_path = save_path, session_id = self.session_id)
+            return save_path
+        except Exception as e:
+            self.log.error("Failed to save PDF", error = str(e), session_id = self.session_id)
+            raise DocumentPortalExeption(f"Failed to save PDF: {str(e)}", e) from e
+    def read_pdf(self, pdf_path:str)->str:
+        try:
+            text_chunks = []
+            with fitz.open(pdf_path) as doc:
+                for page_num in range(doc.page_count):
+                    page = doc.load_page(page_num)
+                    text_chunks.append(f"\n-- page {page_num+1} --\n{page.get_text()}")
+
+            text = "\n".join(text_chunks)
+            self.log.info("Failed to read PDF", error = str(e))
+            return text
+        except Exception as e:
+            self.log.error("Failed to read PDF", error = str(e),pdf_path = pdf_path, session_id = self.session_id)
+            raise DocumentPortalExeption(f"Could not process PDF: {pdf_path}")
+
+class DocumentComparator:
+    def __init__(self, base_dir:str="data\document_compare",session_id:Optional[str]=None):
+        self.log = CustomLogger().get_logger(__name__)
+        self.base_dir = Path(base_dir)
+        self.session_id = session_id or session_id()
+        self.session_path = self.base_dir/ self.session_id
+        self.session_path.mkdir(parents=True, exist_ok=True)
+        self.log.info("Document compare initialized", session_path = str(self.session_path))
+
+    def save_uploaded_files(self, referance_file, actual_file):
+        try:
+            ref_path = self.session_id / referance_file.name
+            act_path = self.session_id / actual_file.name
+            for fobj, out in ((referance_file, ref_path),(actual_file,act_path)):
+                if not fobj.name.lower().endswith(".pdf"):
+                    raise ValueError("Only PDF File are allowed")
+                with open(out,"wb") as f:
+                    if hasattr(fobj,"read"):
+                        f.write(fobj.read())
+
+                    else:
+                        f.write(fobj.getbuffer())
+            self.log.info("File saved", referance = str(ref_path), actual = str(act_path), session = self.session_id)
+            return ref_path, act_path
+        
+        except Exception as e:
+            self.log.error("Error saving PDF files", error = str(e), session = self.session_id)
+            raise DocumentPortalExeption("Error saving files", e)
+    def read_pdf(self, pdf_path:Path):
+        try:
+            with fitz.open(pdf_path) as doc:
+                if doc.is_encrypted:
+                    raise ValueError(f"PDF is encrypted:{pdf_path.name}")
+                parts = []
+                for page_num in range(doc.page_count):
+                    page = doc.load_page(page_num)
+                    text = page.get_text()
+                    if text.strip():
+                        parts.append(f"\n--- {page_num+1} ---\n{text}")
+            self.log.info("PDF readed successfully", file=str(pdf_path), pages=len(parts))
+            return "\n".join(parts)
+        except Exception as e:
+            self.log.error("Error reading PDF", file = str(pdf_path), error = str(e))
+            raise DocumentPortalExeption("Error reading PDF", e)
+    def combine_documents(self):
+        pass
+    def clean_old_session(self):
+        pass
+
