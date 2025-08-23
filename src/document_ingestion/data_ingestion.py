@@ -20,6 +20,10 @@ from utils.model_loader import Model_loader
 from logger.custom_logger import CustomLogger
 from exeption.custom_exeption import DocumentPortalExeption
 
+from utils.file_io import session_id, save_uploaded_files
+from utils.document_ops import load_documents, concat_for_analysis, concat_for_comparison
+
+
 
 
 
@@ -178,7 +182,27 @@ class DocumentComparator:
             self.log.error("Error reading PDF", file = str(pdf_path), error = str(e))
             raise DocumentPortalExeption("Error reading PDF", e)
     def combine_documents(self):
-        pass
-    def clean_old_session(self):
-        pass
+        try:
+            doc_parts = []
+            for file in sorted(self.session_path.iterdir()):
+                if file.is_file() and file.suffix.lower()==".pdf":
+                    content = self.read_pdf(file)
+                    doc_parts.append(f"Document: {file.name}\n{content}")
+            combined_text = "\n\n".join(doc_parts)
+            self.log.info("Document combined", count = len(doc_parts), session = self.session_id)
+            return combined_text
+
+                
+        except Exception as e:
+            self.log.error("Error combining documents", error=str(e), session = self.session_id)
+            raise DocumentPortalExeption("Error combining documents", e)
+    def clean_old_session(self, keep_latest: int =3):
+        try:
+            session = sorted( [f for f in self.base_dir.iterdir() if f.is_dir()], reverse=True)
+            for folder in session[keep_latest]:
+                shutil.rmtree(folder, ignore_errors=True)
+                self.log.info("Old session folder deleted", path = str(folder))
+        except Exception as e:
+            self.log.error("Error cleaning old sessions", error=str(e))
+            raise DocumentPortalExeption("Error cleaning old sessions", e)
 
