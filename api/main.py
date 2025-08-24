@@ -55,11 +55,11 @@ class FastAPIAdapter:
 
 
 def _read_pdf_via_handler(handler:DocHandler, path:str)->str:
-    try:
-        pass
-    except Exception as e:
-        raise HTTPException(status_code=500,detail=f"Error reading PDF: {str(e)}")
-
+    if hasattr(handler,"read_pdf"):
+        return handler.read_pdf(path)
+    if hasattr(handler,"read_"):
+        return handler.read_(path)
+    raise RuntimeError("Document has neither read_pdf nor read_ method.")
 
 @app.post("/analyze")
 async def analyze_document(file: UploadFile = File(...)) ->Any:
