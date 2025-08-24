@@ -77,7 +77,7 @@ class FaissManager:
             self.save_meta()
         return len(new_docs)
 
-    def load_or_create(self):
+    def load_or_create(self, text:Optional[list[str]]=None, metadatas:Optional[List[dict]]=None):
         if self._exists():
             self.vs = FAISS.load_local(
                 str(self.index_dir),
@@ -85,6 +85,11 @@ class FaissManager:
                 allow_dangerous_deserialization=True
             )
             return self.vs
+        if not text:
+            raise DocumentPortalExeption("No existing FAISS indexx and no data to create one", sys)
+        self.vs = FAISS.from_texts(texts=text, embedding=self.emb, metadatas=metadatas or [])
+        self.vs.save_local(str(self.index_dir))
+        return self.vs
 
 class ChatIngestor:
     def __init__(self,
@@ -103,16 +108,57 @@ class ChatIngestor:
 
             self.temp_dir = self._resolve_dir(self.temp_dir)
             self.faiss_base = self._resolve_dir(self.faiss_base)
+
+            self.log.info("ChatIngestor initialized",
+                          session_id = self.session_id,
+                          temp_dir = str(self.temp_dir),
+                          faiss_dir = str(self.faiss_dir),
+                          sessionized = self.use_session
+                          )
         except Exception as e:
             self.log.error("Failed to initialize Chat Ingestion")
             raise DocumentPortalExeption("Initialization error in Chat Ingestor", e)
         
-    def _resolve_dir(self):
-        pass
-    def split(self):
-        pass
-    def built_retriever(self):
-        pass
+    def _resolve_dir(self, base:Path):
+        if self.use_session:
+            d = base/self.session_id
+            d.mkdir(parents=True, exist_ok=True)
+            return d
+        return base
+    
+    def _split(self, docs:List[Document], chunk_size=1000, chunk_overlap = 300)->List[Document]:
+        splitter = RecursiveCharacterTextSplitter(chunk_size = chunk_size, chunk_overlap=chunk_overlap)
+        chunks = splitter.split_documents(docs)
+        return chunks
+    
+    def built_retriever(self, uploaded_files:Iterable,
+                        *,chunk_size: int = 1000,
+                        chunk_overlap:int = 200,
+                        k:int = 5):
+        try:
+            path = save_uploaded_files(uploaded_files, self.temp_dir)
+            docs = load_documents(path)
+            if not docs:
+                raise ValueError("No valid documents loaded")
+            chunks = self._split(docs, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+            fm = FaissManager(self.faiss_dir, self.model_loader)
+            texts = [c.page_content for c in chunks]
+            metas = [c.metadata for c in chunks]
+
+            try:
+                vs = fm.load_or_create(texts=texts, metadatas = metas)
+            except:
+                vs = fm.load_or_create(texts = texts, metadatas= metas)
+            added = fm.add_document(chunks)
+            self.log.info("FAISS index updated", added = added, index=str(self.faiss_dir))
+
+            return vs.as_retriever(search="similarity", search_kwargs={"k":k})
+
+
+
+        except Exception as e:
+            self.log.info("Failed to build retriever", error = str(e))
+            raise DocumentPortalExeption("Failed to build retriver", e) from e
 
 
 class DocHandler:
