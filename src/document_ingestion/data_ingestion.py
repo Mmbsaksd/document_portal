@@ -20,7 +20,7 @@ from utils.model_loader import Model_loader
 from logger.custom_logger import CustomLogger
 from exeption.custom_exeption import DocumentPortalExeption
 
-from utils.file_io import session_id, save_uploaded_files
+from utils.file_io import generate_session_id, save_uploaded_files
 from utils.document_ops import load_documents, concat_for_analysis, concat_for_comparison
 
 
@@ -87,8 +87,26 @@ class FaissManager:
             return self.vs
 
 class ChatIngestor:
-    def __init__(self):
-        pass
+    def __init__(self,
+                 temp_base:str = "data",
+                 faiss_base:str = "faiss_index",
+                 use_session:str = True,
+                 session_id:Optional[str]=None
+                 ):
+        try:
+            self.log = CustomLogger().get_logger(__name__)
+            self.model_loader = Model_loader()
+
+            self.use_session = use_session
+            self.session_id = session_id or generate_session_id
+
+
+            self.temp_dir = self._resolve_dir(self.temp_dir)
+            self.faiss_base = self._resolve_dir(self.faiss_base)
+        except Exception as e:
+            self.log.error("Failed to initialize Chat Ingestion")
+            raise DocumentPortalExeption("Initialization error in Chat Ingestor", e)
+        
     def _resolve_dir(self):
         pass
     def split(self):
