@@ -21,7 +21,7 @@ from logger.custom_logger import CustomLogger
 from exeption.custom_exeption import DocumentPortalExeption
 
 from utils.file_io import generate_session_id, save_uploaded_files
-from utils.document_ops import load_documents, concat_for_analysis, concat_for_comparison
+from utils.document_ops import load_documents, concat_for_analysis, concat_for_comparision
 
 
 

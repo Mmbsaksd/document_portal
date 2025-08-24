@@ -4,12 +4,15 @@ from typing import Iterable, List
 from fastapi import UploadFile
 from langchain.schema import Document
 from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader, TextLoader
-from logger import GLOBAL_LOGGER as log
+from logger.custom_logger import CustomLogger
+
+
 from exeption.custom_exeption import DocumentPortalExeption
 
 
 
 SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt"}
+log = CustomLogger().get_logger(__name__)
 
 def load_documents(paths:Iterable[Path])->List[Document]:
     docs: List[Document] = []
