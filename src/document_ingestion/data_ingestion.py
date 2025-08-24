@@ -103,11 +103,11 @@ class ChatIngestor:
             self.model_loader = Model_loader()
 
             self.use_session = use_session
-            self.session_id = session_id or generate_session_id
+            self.session_id = session_id or generate_session_id()
 
 
-            self.temp_dir = self._resolve_dir(self.temp_dir)
-            self.faiss_base = self._resolve_dir(self.faiss_base)
+            self.temp_dir = self._resolve_dir(Path(temp_base))
+            self.faiss_base = self._resolve_dir(Path(faiss_base))
 
             self.log.info("ChatIngestor initialized",
                           session_id = self.session_id,
@@ -163,29 +163,27 @@ class ChatIngestor:
 
 class DocHandler:
     def __init__(self, data_dir:Optional[str]=None, session_id:Optional[str]=None):
-        self.log = CustomLogger.get_logger(__name__)
+        self.log = CustomLogger().get_logger(__name__)
         self.data_dir = data_dir or os.getenv("DATA_STORAGE_PATH", os.path.join(os.getcwd(),"data","document_analysis"))
-        self.session_id = session_id or session_id("session_id")
+        self.session_id = session_id or generate_session_id()
         self.session_path = os.path.join(self.data_dir, self.session_id)
         os.makedirs(self.session_path, exist_ok=True)
         self.log.info("DocHandler initialized", session_id = self.session_id, session_path = self.session_path)
 
     def save_pdf(self, uploaded_file)->str:
         try:
-            filename = os.path.basename(uploaded_file)
+            filename = os.path.basename(uploaded_file.name)
             if not filename.lower().endswith(".pdf"):
                 raise ValueError("Invalid file type. Only PDFs are allowed.")
             save_path = os.path.join(self.session_path, filename)
             with open(save_path,"wb") as f:
-                if hasattr(uploaded_file,"read"):
-                    f.write(uploaded_file.read())
-                else:
-                    f.write(uploaded_file.getbuffer())
+                f.write(uploaded_file.getbuffer())
             self.log.info("PDF saved successfully", file = filename, save_path = save_path, session_id = self.session_id)
             return save_path
         except Exception as e:
             self.log.error("Failed to save PDF", error = str(e), session_id = self.session_id)
             raise DocumentPortalExeption(f"Failed to save PDF: {str(e)}", e) from e
+        
     def read_pdf(self, pdf_path:str)->str:
         try:
             text_chunks = []
@@ -195,7 +193,7 @@ class DocHandler:
                     text_chunks.append(f"\n-- page {page_num+1} --\n{page.get_text()}")
 
             text = "\n".join(text_chunks)
-            self.log.info("Failed to read PDF", error = str(e))
+            self.log.info("PDF read succeddfully", pdf_path=pdf_path, pages=len(text_chunks))
             return text
         except Exception as e:
             self.log.error("Failed to read PDF", error = str(e),pdf_path = pdf_path, session_id = self.session_id)
@@ -205,15 +203,15 @@ class DocumentComparator:
     def __init__(self, base_dir:str="data\document_compare",session_id:Optional[str]=None):
         self.log = CustomLogger().get_logger(__name__)
         self.base_dir = Path(base_dir)
-        self.session_id = session_id or session_id()
+        self.session_id = session_id or generate_session_id()
         self.session_path = self.base_dir/ self.session_id
         self.session_path.mkdir(parents=True, exist_ok=True)
         self.log.info("Document compare initialized", session_path = str(self.session_path))
 
     def save_uploaded_files(self, referance_file, actual_file):
         try:
-            ref_path = self.session_id / referance_file.name
-            act_path = self.session_id / actual_file.name
+            ref_path = self.session_path / referance_file.name
+            act_path = self.session_path / actual_file.name
             for fobj, out in ((referance_file, ref_path),(actual_file,act_path)):
                 if not fobj.name.lower().endswith(".pdf"):
                     raise ValueError("Only PDF File are allowed")
@@ -263,7 +261,7 @@ class DocumentComparator:
     def clean_old_session(self, keep_latest: int =3):
         try:
             session = sorted( [f for f in self.base_dir.iterdir() if f.is_dir()], reverse=True)
-            for folder in session[keep_latest]:
+            for folder in session[keep_latest:]:
                 shutil.rmtree(folder, ignore_errors=True)
                 self.log.info("Old session folder deleted", path = str(folder))
         except Exception as e:

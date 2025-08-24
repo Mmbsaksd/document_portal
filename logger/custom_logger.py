@@ -5,7 +5,9 @@ import structlog
 
 class CustomLogger:
     def __init__(self, log_dir="logs"):
-        self.logs_dir = os.path.join(os.getcwd(),"logs")
+        if log_dir is None:
+            log_dir = os.path.join(os.getcwd(),"logs")
+        self.logs_dir = log_dir
         os.makedirs(self.logs_dir, exist_ok=True)
 
         log_file = f"{datetime.now().strftime('%m_%d_%y_%Y_%H_%M_%S')}.log"
@@ -40,7 +42,10 @@ class CustomLogger:
             logger_factory=structlog.stdlib.LoggerFactory(),
             cache_logger_on_first_use=True
         )
-        return structlog.get_logger(logger_name)
+        logger = structlog.get_logger(logger_name).bind()
+        logger.log_file_path = self.log_file_path
+        return logger
+    
 
 
 

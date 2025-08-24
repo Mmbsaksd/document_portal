@@ -1,4 +1,5 @@
 #uvicorn main:app --reload
+#uvicorn api.main:app --reload
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, HTMLResponse
@@ -9,6 +10,10 @@ from typing import Dict, Any, List, Optional
 from pathlib import Path
 
 import os
+from logger.custom_logger import CustomLogger
+
+log = CustomLogger().get_logger(__name__)
+
 
 FAISS_BASE = os.getenv("FAISS_BASE", "faiss_index")
 UPLOAD_BASE = os.getenv("UPLOAD_BASE", "data")
@@ -52,7 +57,7 @@ class FastAPIAdapter:
         self.uf = uf
         self.name = uf.filename
     def getbuffer(self):
-        self._uf.file.seek(0)
+        self.uf.file.seek(0)
         return self.uf.file.read()
 
 
