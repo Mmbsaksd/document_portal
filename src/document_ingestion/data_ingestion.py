@@ -149,7 +149,7 @@ class ChatIngestor:
             metas = [c.metadata for c in chunks]
 
 
-            vs = fm.load_or_create(texts=texts, metadatas = metas)
+            vs = fm.load_or_create(text=texts, metadatas = metas)
 
         
             added = fm.add_document(chunks)

@@ -18,9 +18,9 @@ def generate_session_id(prefix: str = "session")-> str:
     ist = ZoneInfo("Asia/Kolkata")
     return f"{prefix}_{datetime.now(ist).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
 
-def save_uploaded_files(self,uploaded_files:Iterable, target_dir:Path)->List[Path]:
+def save_uploaded_files(uploaded_files:Iterable, target_dir:Path)->List[Path]:
     try:
-        self.log = CustomLogger().get_logger(__name__)
+        log = CustomLogger().get_logger(__name__)
         target_dir.mkdir(parents=True, exist_ok=True)
         saved:List[Path] = []
 
@@ -28,7 +28,7 @@ def save_uploaded_files(self,uploaded_files:Iterable, target_dir:Path)->List[Pat
             name = getattr(uf,"name","file")
             ext = Path(name).suffix.lower()
             if ext not in SUPPORT_EXTENTIONS:
-                self.log.warning("Unsupported file skipped", filename=name)
+                log.warning("Unsupported file skipped", filename=name)
                 continue
             safe_name = re.sub(r'[^a-zA-Z0-9_\-]','_', Path(name).stem).lower()
             fname = f"{safe_name}_{uuid.uuid4().hex[:6]}{ext}"
@@ -41,8 +41,8 @@ def save_uploaded_files(self,uploaded_files:Iterable, target_dir:Path)->List[Pat
                 else:
                     f.write(uf.getbuffer())
             saved.append(out)
-            self.log.info("File saved for the ingestion", uploaded = name, asved_as = str(out))
+            log.info("File saved for the ingestion", uploaded = name, asved_as = str(out))
         return saved
     except Exception as e:
-        self.log.error("Failed to save uploaded files", error=str(e), dir=str(target_dir))
+        log.error("Failed to save uploaded files", error=str(e), dir=str(target_dir))
         raise DocumentPortalExeption("Failed to save uploaded files", e) from e
