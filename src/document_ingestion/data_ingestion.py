@@ -95,19 +95,19 @@ class ChatIngestor:
     def __init__(self,
                  temp_base:str = "data",
                  faiss_base:str = "faiss_index",
-                 use_session:str = True,
+                 use_session_dirs:bool = True,
                  session_id:Optional[str]=None
                  ):
         try:
             self.log = CustomLogger().get_logger(__name__)
             self.model_loader = Model_loader()
 
-            self.use_session = use_session
+            self.use_session = use_session_dirs
             self.session_id = session_id or generate_session_id()
 
 
             self.temp_dir = self._resolve_dir(Path(temp_base))
-            self.faiss_base = self._resolve_dir(Path(faiss_base))
+            self.faiss_dir = self._resolve_dir(Path(faiss_base))
 
             self.log.info("ChatIngestor initialized",
                           session_id = self.session_id,
@@ -116,7 +116,7 @@ class ChatIngestor:
                           sessionized = self.use_session
                           )
         except Exception as e:
-            self.log.error("Failed to initialize Chat Ingestion")
+            self.log.error(f"Failed to initialize Chat Ingestion: {e}")
             raise DocumentPortalExeption("Initialization error in Chat Ingestor", e)
         
     def _resolve_dir(self, base:Path):
@@ -157,7 +157,7 @@ class ChatIngestor:
 
 
         except Exception as e:
-            self.log.info("Failed to build retriever", error = str(e))
+            self.log.info(f"Failed to build retriever: {e}")
             raise DocumentPortalExeption("Failed to build retriver", e) from e
 
 
@@ -181,7 +181,7 @@ class DocHandler:
             self.log.info("PDF saved successfully", file = filename, save_path = save_path, session_id = self.session_id)
             return save_path
         except Exception as e:
-            self.log.error("Failed to save PDF", error = str(e), session_id = self.session_id)
+            self.log.error(f"Failed to save PDF: {e}")
             raise DocumentPortalExeption(f"Failed to save PDF: {str(e)}", e) from e
         
     def read_pdf(self, pdf_path:str)->str:
@@ -241,7 +241,7 @@ class DocumentComparator:
             self.log.info("PDF readed successfully", file=str(pdf_path), pages=len(parts))
             return "\n".join(parts)
         except Exception as e:
-            self.log.error("Error reading PDF", file = str(pdf_path), error = str(e))
+            self.log.error("Error reading PDF: {e}")
             raise DocumentPortalExeption("Error reading PDF", e)
     def combine_documents(self):
         try:
