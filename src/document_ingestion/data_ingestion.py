@@ -109,6 +109,8 @@ class ChatIngestor:
             self.temp_dir = self._resolve_dir(Path(temp_base))
             self.faiss_dir = self._resolve_dir(Path(faiss_base))
 
+            self.session_dir = self.faiss_dir
+
             self.log.info("ChatIngestor initialized",
                           session_id = self.session_id,
                           temp_dir = str(self.temp_dir),
@@ -145,19 +147,19 @@ class ChatIngestor:
             texts = [c.page_content for c in chunks]
             metas = [c.metadata for c in chunks]
 
-            try:
-                vs = fm.load_or_create(texts=texts, metadatas = metas)
-            except:
-                vs = fm.load_or_create(texts = texts, metadatas= metas)
+
+            vs = fm.load_or_create(texts=texts, metadatas = metas)
+
+        
             added = fm.add_document(chunks)
             self.log.info("FAISS index updated", added = added, index=str(self.faiss_dir))
 
-            return vs.as_retriever(search="similarity", search_kwargs={"k":k})
+            return vs.as_retriever(search_type="similarity", search_kwargs={"k":k})
 
 
 
         except Exception as e:
-            self.log.info(f"Failed to build retriever: {e}")
+            self.log.error("Failed to build retriever", error=str(e))
             raise DocumentPortalExeption("Failed to build retriver", e) from e
 
 
