@@ -77,19 +77,16 @@ class FaissManager:
             self.save_meta()
         return len(new_docs)
 
-    def load_or_create(self, text:Optional[list[str]]=None, metadatas:Optional[List[dict]]=None):
-        if self._exists():
-            self.vs = FAISS.load_local(
-                str(self.index_dir),
-                embeddings=self.emb,
-                allow_dangerous_deserialization=True
-            )
-            return self.vs
-        if not text:
-            raise DocumentPortalExeption("No existing FAISS indexx and no data to create one", sys)
-        self.vs = FAISS.from_texts(texts=text, embedding=self.emb, metadatas=metadatas or [])
-        self.vs.save_local(str(self.index_dir))
+    def load_or_create(self, text: Optional[List[str]] = None, metadatas: Optional[List[dict]] = None):
+        if self._exists():  # instead of self.index_file.exists()
+            self.vs = FAISS.load_local(str(self.index_dir), self.emb)
+        else:
+            if not text:
+                raise DocumentPortalExeption("No existing FAISS index and no data to create one", None)
+            self.vs = FAISS.from_texts(texts=text, embedding=self.emb, metadatas=metadatas or [])
+            self.vs.save_local(str(self.index_dir))
         return self.vs
+
 
 class ChatIngestor:
     def __init__(self,
@@ -109,7 +106,11 @@ class ChatIngestor:
             self.temp_dir = self._resolve_dir(Path(temp_base))
             self.faiss_dir = self._resolve_dir(Path(faiss_base))
 
-            self.session_dir = self.faiss_dir
+            if self.use_session:
+                self.session_dir = self.faiss_dir / self.session_id  # #hash-session-dir
+                self.session_dir.mkdir(parents=True, exist_ok=True)   # #hash-session-dir
+            else:
+                self.session_dir = self.faiss_dir  
 
             self.log.info("ChatIngestor initialized",
                           session_id = self.session_id,
@@ -138,7 +139,7 @@ class ChatIngestor:
                         chunk_overlap:int = 200,
                         k:int = 5):
         try:
-            path = save_uploaded_files(uploaded_files, target_dir=self.session_dir)
+            path = save_uploaded_files(uploaded_files=uploaded_files, target_dir=self.session_dir)
             docs = load_documents(path)
             if not docs:
                 raise ValueError("No valid documents loaded")
