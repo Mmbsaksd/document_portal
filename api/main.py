@@ -87,7 +87,7 @@ async def analyze_document(file: UploadFile = File(...)) ->Any:
         raise HTTPException(status_code=500, detail=f"Analysis failed:{e}")
 
 @app.post("/compare")
-async def compare_document(referance:UploadFile = File(...), actual:UploadFile=File(...)) ->Any:
+async def compare_document(reference:UploadFile = File(...), actual:UploadFile=File(...)) ->Any:
     try:
         dc = DocumentComparator()
         ref_path, act_path = dc.save_uploaded_files(FastAPIAdapter(reference),FastAPIAdapter(actual))
