@@ -37,7 +37,7 @@ class FaissManager:
 
         if self.meta_path.exists():
             try:
-                self.meta = json.loads(self.meta_path.read_text(encoding="uft-8")) or {"rows":{}}
+                self.meta = json.loads(self.meta_path.read_text(encoding="utf-8")) or {"rows":{}}
 
             except Exception as e:
                 self.meta = {"rowa":{}}
@@ -136,7 +136,7 @@ class ChatIngestor:
                         chunk_overlap:int = 200,
                         k:int = 5):
         try:
-            path = save_uploaded_files(uploaded_files, self.temp_dir)
+            path = save_uploaded_files(uploaded_files, target_dir=self.session_dir)
             docs = load_documents(path)
             if not docs:
                 raise ValueError("No valid documents loaded")
@@ -208,11 +208,11 @@ class DocumentComparator:
         self.session_path.mkdir(parents=True, exist_ok=True)
         self.log.info("Document compare initialized", session_path = str(self.session_path))
 
-    def save_uploaded_files(self, referance_file, actual_file):
+    def save_uploaded_files(self, reference_file, actual_file):
         try:
-            ref_path = self.session_path / referance_file.name
+            ref_path = self.session_path / reference_file.name
             act_path = self.session_path / actual_file.name
-            for fobj, out in ((referance_file, ref_path),(actual_file,act_path)):
+            for fobj, out in ((reference_file, ref_path),(actual_file,act_path)):
                 if not fobj.name.lower().endswith(".pdf"):
                     raise ValueError("Only PDF File are allowed")
                 with open(out,"wb") as f:

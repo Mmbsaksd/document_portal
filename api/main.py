@@ -1,5 +1,7 @@
 #uvicorn main:app --reload
 #uvicorn api.main:app --reload
+#set LLM_PROVIDER=google
+
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, HTMLResponse
@@ -88,7 +90,7 @@ async def analyze_document(file: UploadFile = File(...)) ->Any:
 async def compare_document(reference:UploadFile = File(...), actual:UploadFile=File(...)) ->Any:
     try:
         dc = DocumentComparator()
-        ref_path, act_path = dc.save_uploaded_files(FastAPIAdapter(reference),FastAPIAdapter(actual))
+        ref_path, act_path = dc.save_uploaded_files(FastAPIAdapter(reference),FastAPIAdapter(actual),target_dir=dc.session_dir)
         _ = ref_path, act_path
         combined_text = dc.combine_documents()
         comp = DocumentComparatorLLM()
@@ -122,6 +124,7 @@ async def chat_build_index(
     except HTTPException:
         raise
     except Exception as e:
+        log.exception("Chat index building failed", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Query failed: {e}")
     
 @app.post("/chat/query")
@@ -155,6 +158,7 @@ async def chat_query(
     except HTTPException:
         raise
     except Exception as e:
+        log.exception("Chat query failed", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Query failed: {e}")
     
 
