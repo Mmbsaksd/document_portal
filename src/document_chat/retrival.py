@@ -25,10 +25,12 @@ class ConversationalRAG:
             self.llm = self._load_llm()
             self.contextualize_prompt:ChatPromptTemplate = PROMPT_REGISTRY[PromptType.CONTEXTUALIZE_QUESTION.value]
             self.qa_prompt: ChatPromptTemplate = PROMPT_REGISTRY[PromptType.CONTEXT_QA.value]
-            if retriever is None:
-                raise ValueError("Retriever cannot ne None")
+
             self.retriever = retriever
-            self._build_lcel_chain()
+            self.chain = None
+            if self.retriever is not None:
+                self._build_lcel_chain()
+                self.log.info("FAISS retriever loaded successfully")
             self.log.info("ConversationalRAG initialized", session_id = self.session_id)
         except Exception as e:
             self.log.error("Failed to initialize ConversationalRAG", error = str(e))
@@ -47,6 +49,8 @@ class ConversationalRAG:
 
             self.retriever = vectorstore.as_retriever(search_type = "similarity", search_kwargs = {"k":5})
             self.log.info("FAISS retriver loaded successfully", index_path=index_path, session_id = self.session_id)
+
+            self._build_lcel_chain()
 
             return self.retriever
 
