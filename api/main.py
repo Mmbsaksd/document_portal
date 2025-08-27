@@ -124,7 +124,7 @@ async def chat_build_index(
     except HTTPException:
         raise
     except Exception as e:
-        log.exception("Chat index building failed", exc_info=True)
+        log.exception("Chat index building failed")
         raise HTTPException(status_code=500, detail=f"Query failed: {e}")
     
 @app.post("/chat/query")
@@ -158,7 +158,7 @@ async def chat_query(
     except HTTPException:
         raise
     except Exception as e:
-        log.exception("Chat query failed", exc_info=True)
+        log.exception("Chat query failed")
         raise HTTPException(status_code=500, detail=f"Query failed: {e}")
     
 
