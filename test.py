@@ -129,54 +129,54 @@
 #     #Run the test
 #     test_conversional_rag_pdf(pdf_path,question)
 
-import sys
-from pathlib import Path
-from src.multi_document_chat.data_ingestion import DocumentIngestor
-from src.multi_document_chat.retrival import ConversationalRAG
+# import sys
+# from pathlib import Path
+# from src.multi_document_chat.data_ingestion import DocumentIngestor
+# from src.multi_document_chat.retrival import ConversationalRAG
 
 
 
-def test_document_ingestion_and_rag():
-    try:
-        test_files = [
-            "data\\multi_doc_chat\\market_analysis_report.docx",
-            "data\\multi_doc_chat\\NIPS-2017-attention-is-all-you-need-Paper.pdf",
-            "data\\multi_doc_chat\\sample.pdf",
-            "data\\multi_doc_chat\\state_of_the_union.txt"
-        ]
-        upload_files = []
-        for file_path in test_files:
-            if Path(file_path).exists():
-                upload_files.append(open(file_path,"rb"))
-            else:
-                print(f"File does not exists: {file_path}")
+# def test_document_ingestion_and_rag():
+#     try:
+#         test_files = [
+#             "data\\multi_doc_chat\\market_analysis_report.docx",
+#             "data\\multi_doc_chat\\NIPS-2017-attention-is-all-you-need-Paper.pdf",
+#             "data\\multi_doc_chat\\sample.pdf",
+#             "data\\multi_doc_chat\\state_of_the_union.txt"
+#         ]
+#         upload_files = []
+#         for file_path in test_files:
+#             if Path(file_path).exists():
+#                 upload_files.append(open(file_path,"rb"))
+#             else:
+#                 print(f"File does not exists: {file_path}")
 
-        if not upload_files:
-            print("No valid files to upload")
-            sys.exit(1)
-        ingestor = DocumentIngestor()
-        retriever = ingestor.ingest_files(upload_files)
+#         if not upload_files:
+#             print("No valid files to upload")
+#             sys.exit(1)
+#         ingestor = DocumentIngestor()
+#         retriever = ingestor.ingest_files(upload_files)
 
-        for f in upload_files:
-            f.close()
+#         for f in upload_files:
+#             f.close()
         
-        session_id = "test_multi_doc_chat"
+#         session_id = "test_multi_doc_chat"
 
-        rag = ConversationalRAG(session_id=session_id, retriever=retriever)
-        question = "what said zelenskyy in his speech on parliment"
-
-
-        answer = rag.invoke(question)
-        print(f"\n Question: ", question)
-        print(f"Answer: ", answer)
+#         rag = ConversationalRAG(session_id=session_id, retriever=retriever)
+#         question = "what said zelenskyy in his speech on parliment"
 
 
-    except Exception as e:
-        print(f"Test failed: {str(e)}")
-        sys.exit(1)
+#         answer = rag.invoke(question)
+#         print(f"\n Question: ", question)
+#         print(f"Answer: ", answer)
 
-if __name__ == "__main__":
-    test_document_ingestion_and_rag()
+
+#     except Exception as e:
+#         print(f"Test failed: {str(e)}")
+#         sys.exit(1)
+
+# if __name__ == "__main__":
+#     test_document_ingestion_and_rag()
 
 
 # testing for multidocument
