@@ -1,7 +1,7 @@
 {
   "family": "documentportaltd",
   "networkMode": "awsvpc",
-  "executionRoleArn": "aws:iam::380610849617:user/github-cicd-liveclass",
+  "executionRoleArn": "arn:aws:iam::380610849617:role/live-class",
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "1024",
   "memory": "8192",
