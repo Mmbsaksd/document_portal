@@ -8,3 +8,4 @@ logs/
 faiss_index
 archive
 data/
+.env/
